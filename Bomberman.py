@@ -31,11 +31,12 @@ clock = pygame.time.Clock()
 WIDTH = 10
 HEIGHT = 10
 EMPTY = 0
-WALL = 1
 PLAYER1 = 2
 PLAYER2 = 3 
 BOMB = 4
 EXPLOSION = 5
+
+explosion_time = 1000
 
 # Players position
 player1_pos = [1,1]
@@ -79,6 +80,7 @@ class Player:
         with lock:
             board[self.pos[0]][self.pos[1]] = EMPTY
             pygame.quit()
+            quit()
         
     def place(self, player):
         if player.bombs > 0:
@@ -148,20 +150,31 @@ class Bomb:
     def countdown(self):
         current = pygame.time.get_ticks()
         if current - self.start >= self.timer:
-            self.explosion()
+            return self.explosion()
 
     #Explosion of the bomb
     def explosion(self):
+        deadplayer = EMPTY
         while self.live:
             for i in bomb_range:
-                if self.pos[0] + i >= HEIGHT - 1 or self.pos[1] + i >= WIDTH - 1:
+                if self.pos[1] + i >= WIDTH - 1 or self.pos[1] + i < 0:
                     continue
-                if board[self.pos[0] + i][self.pos[1]] != EMPTY or board[self.pos[0]][self.pos[1] + i] != EMPTY:                  
-                    print("xd")   
+                if board[self.pos[0]][self.pos[1] + i] == PLAYER1:                  
+                    deadplayer = PLAYER1   
+                elif board[self.pos[0]][self.pos[1] + i] == PLAYER2:
+                    deadplayer = PLAYER2
+            for i in bomb_range:
+                if self.pos[0] + i >= HEIGHT - 1 or self.pos[0] + i < 0:
+                    continue
+                if board[self.pos[0] + i][self.pos[1]] == PLAYER1:                  
+                    deadplayer = PLAYER1   
+                elif board[self.pos[0] + i][self.pos[1]] == PLAYER2:
+                    deadplayer = PLAYER2
             with lock:
                 board[self.pos[0]][self.pos[1]] = EMPTY
             self.live = False
         draw_board()
+        return deadplayer
 
 
 def draw_board():
@@ -176,12 +189,17 @@ def draw_board():
             elif board[i][j] == PLAYER1:
                 pygame.draw.rect(window, (0, 255, 0), (cell_x, cell_y, WINDOW_WIDTH // WIDTH, WINDOW_HEIGHT // HEIGHT))
             elif board[i][j] == PLAYER2:
-                pygame.draw.rect(window, (0, 0, 255), (cell_x, cell_y, WINDOW_WIDTH // WIDTH, WINDOW_HEIGHT // HEIGHT))
+                pygame.draw.rect(window, (80, 80, 255), (cell_x, cell_y, WINDOW_WIDTH // WIDTH, WINDOW_HEIGHT // HEIGHT))
             elif board[i][j] == BOMB:
                 pygame.draw.rect(window, (255, 0, 0), (cell_x, cell_y, WINDOW_WIDTH // WIDTH, WINDOW_HEIGHT // HEIGHT))
             elif board[i][j] == EXPLOSION:
                 pygame.draw.rect(window, (204, 102, 0), (cell_x, cell_y, WINDOW_WIDTH // WIDTH, WINDOW_HEIGHT // HEIGHT))
-    pygame.display.flip()  # Update the window              
+
+            # Draw the grid lines
+            pygame.draw.rect(window, (128, 128, 128), (cell_x, cell_y, WINDOW_WIDTH // WIDTH, WINDOW_HEIGHT // HEIGHT), 1)
+
+    # Update the window 
+    pygame.display.flip()               
 
 def main():
     # Creating players
@@ -207,22 +225,26 @@ def main():
     
     while True:
         for bomb in bombs:
-            bomb.countdown()
+            deadplayer = bomb.countdown()
+            if deadplayer == PLAYER1:
+                player1.die()
+            elif deadplayer == PLAYER2:
+                player2.die()
         for event in pygame.event.get():
             if event.type == QUIT:
                 pygame.quit()
                 quit()
             elif event.type == KEYDOWN:
                 if event.key == K_a:
-                    player1.move(PLAYER1, 0)
+                    player1.move(PLAYER1,0)
                 elif event.key == K_d:
-                    player1.move(PLAYER1, 1)
+                    player1.move(PLAYER1,1)
                 elif event.key == K_w:
-                    player1.move(PLAYER1, 2)
+                    player1.move(PLAYER1,2)
                 elif event.key == K_s:
-                    player1.move(PLAYER1, 3)
+                    player1.move(PLAYER1,3)
                 elif event.key == K_KP4:
-                    player2.move(PLAYER2, 0)
+                    player2.move(PLAYER2,0)
                 elif event.key == K_KP6:
                     player2.move(PLAYER2,1)
                 elif event.key == K_KP8:
