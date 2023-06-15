@@ -11,9 +11,11 @@ Gracze sterują swoimi postaciami (kwadratami w odpowiednim kolorze) za pomocą 
 ## Grafika
 
 ![Grafika ilustrująca koncept działania programu](concept_graphic.png)
+
 Grafika 1. Początek gry
 
 ![Grafika ilustrująca koncept działania programu 2](concept_graphic_2.png)
+
 Grafika 2. Postęp gry, bomby, wybuchy, eksplozje, pościgi
 
 ## Wątki
